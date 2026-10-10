@@ -7,6 +7,52 @@
 </head>
 <body>
     <h1>Robótica de Servicios</h1>
-    <p>Bienvenido a mi página web.</p>
+    <p>Por Mario Casero Sández</p>
+
+    <h2>Índice</h2>
+    <ul>
+        <li><a href="#practica1">P1. Localized Vacuum Cleaner</a></li>
+    </ul>
+    
+    <h2 id="practica1">P1. Localized Vacuum Cleaner</h2>
+    <h3>Objetivos</h3>
+    <p>
+        En esta práctica, debemos crear un algoritmo de cobertura para que un robot aspiradora limpie la mayor parte posible de una casa. Para ello, el robot está equipado con un mapa en el cual
+        sabe situarse a si mismo en todo momento.
+    </p>
+    <h3>Solución propuesta</h3>
+    <p>
+        Teniendo en consideración el objetivo final, hemos dividido la realización de este ejercicio en tres puntos fundamentales: La elaboración de un grid dónde representar el mapa,
+        la planificación de la limpieza y la ejecución del movimiento. Ahora explicaremos más a fondo cada parte.
+    </p>  
+    <p>
+        <b>Creación del grid</b>: Al trabajar con el mapa nos encontramos con dos problemas. Primero, las coordenadas del robot no coinciden con las de los pixeles del mapa, y segundo, es muy inexacto comprobar
+        pixel por pixel si todos ellos han sido limpiados. Para paliar ambos problemas, representaremos el mapa en nuestra propia imagen de rejilla, donde cada casilla engloba 32x32 pixeles (aproximadamente el
+        tamaño de la aspiradora) y podemos distinguir facilmente si esa casilla esta ocupada, libre o ya limpiada. Además realizaremos funciones para transformar pixeles del mapa y posiciones del robot en
+        casillas de ese grid.
+    </p>  
+    <p>
+        <b>Planificación</b>: Antes de empezar a ejecutar la limpieza, tenemos que averiguar una ruta que seguir para asegurarnos limpiar todas las casillas de una forma eficiente. Para ello, hemos usado un algoritmo
+        BSA, que se compone a granades rasgos de 2 partes. La primera, un estado dónde comprobará cuales de las casillas vecinas libres aún no ha sido limpiadas para pasar por ellas con un patrón espiral, hasta que
+        se quede en medio de 4 casillas ya limpiadas. Entonces pasará a la segunda parte, el backtracking, dónde volverá hacia puntos ya visitados que aún tenían casillas adyacentes sin limpiar. Para encontrar
+        las rutas a estos puntos, hemos usado una busqueda por anchura sencilla. Tras este proceso, nos quedaremos un array de puntos a los cuales visitar en orden.
+    </p>  
+    <p>
+        <b>Ejecución</b>: Una vez sepamos la ruta que seguir, iremos ha esos puntos uno a uno. Hemos optado por un algoritmo que calcula la diferencia en pixeles para asignarle una velocidad lineal y angular
+        que van adaptandose según se acerca al destino. Usamos pixeles y no casillas del grid pues queremos que el robot se acerque al centro de laas casillas lo máximo posible, para evitar en mayor medida
+        chocarse con obstáculos. Así además conseguimos minimizar el error, pues al volver a comprobar la posición cada iteración eliminamos el error que se hubiese acumulado de movimientos pasados. Una vez
+        completada la acción, el máximo error posible es de 7 pixeles, pues es el margen que le hemos dado para que se quede del centro
+    </p>  
+    <p>
+        Pese a todo y al correcto funcionamiento del algoritmo, las inexactitudes del mapa y la hitbox del robot no del todo precisa pueden llevar al robot a quedarse atascado con partes de la casa. Aunque también
+        se pueden identificar los puntos concretos de la casa dónde pasa esto para aplicarles correciones peronalizadas, hemos optado por darle una solución más general al problemas. Con este objetivo, hemos
+        modificado la función de movimiento para darle más fuerza al movimiento lineal que al angular, para así que se desatasque por su cuenta de los obstaculos, además de crear una trayectoria con más
+        sobreoscilaciones entre casillas, haciendo así que se barra más terreno.
+    </p>
+    <h3>Video</h3>
+    <video controls width="800">
+        <source src="Videos/lvacuum.mp4" type="video/mp4">
+        Tu navegador no puede reproducir este vídeo.
+    </video>
 </body>
 </html>
