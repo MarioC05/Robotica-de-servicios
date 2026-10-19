@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robótica de Servicios</title>
+</head>
+<body>
+    <h1>Robótica de Servicios</h1>
+    <p>Por Mario Casero Sández</p>
+
+    <h2>Índice</h2>
+    <ul>
+        <li><a href="#practica1">P1. Localized Vacuum Cleaner</a></li>
+        <li><a href="#practica2">P2. Drone Rescue People</a></li>
+    </ul>
+    
+    <h2 id="practica1">P1. Localized Vacuum Cleaner</h2>
+    <h3>Objetivos</h3>
+    <p>
+        En esta práctica, debemos crear un algoritmo de cobertura para que un robot aspiradora limpie la mayor parte posible de una casa. Para ello, el robot está equipado con un mapa en el cual
+        sabe situarse a si mismo en todo momento.
+    </p>
+    <h3>Solución propuesta</h3>
+    <p>
+        Teniendo en consideración el objetivo final, hemos dividido la realización de este ejercicio en tres puntos fundamentales: La elaboración de un grid dónde representar el mapa,
+        la planificación de la limpieza y la ejecución del movimiento. Ahora explicaremos más a fondo cada parte.
+    </p>  
+    <p>
+        <b>Creación del grid</b>: Al trabajar con el mapa nos encontramos con dos problemas. Primero, las coordenadas del robot no coinciden con las de los pixeles del mapa, y segundo, es muy inexacto comprobar
+        pixel por pixel si todos ellos han sido limpiados. Para paliar ambos problemas, representaremos el mapa en nuestra propia imagen de rejilla, donde cada casilla engloba 32x32 pixeles (aproximadamente el
+        tamaño de la aspiradora) y podemos distinguir facilmente si esa casilla esta ocupada, libre o ya limpiada. Además realizaremos funciones para transformar pixeles del mapa y posiciones del robot en
+        casillas de ese grid.
+    </p>  
+    <p>
+        <b>Planificación</b>: Antes de empezar a ejecutar la limpieza, tenemos que averiguar una ruta que seguir para asegurarnos limpiar todas las casillas de una forma eficiente. Para ello, hemos usado un algoritmo
+        BSA, que se compone a granades rasgos de 2 partes. La primera, un estado dónde comprobará cuales de las casillas vecinas libres aún no ha sido limpiadas para pasar por ellas con un patrón espiral, hasta que
+        se quede en medio de 4 casillas ya limpiadas. Entonces pasará a la segunda parte, el backtracking, dónde volverá hacia puntos ya visitados que aún tenían casillas adyacentes sin limpiar. Para encontrar
+        las rutas a estos puntos, hemos usado una busqueda por anchura sencilla. Tras este proceso, nos quedaremos un array de puntos a los cuales visitar en orden.
+    </p>  
+    <p>
+        <b>Ejecución</b>: Una vez sepamos la ruta que seguir, iremos ha esos puntos uno a uno. Hemos optado por un algoritmo que calcula la diferencia en pixeles para asignarle una velocidad lineal y angular
+        que van adaptandose según se acerca al destino. Usamos pixeles y no casillas del grid pues queremos que el robot se acerque al centro de laas casillas lo máximo posible, para evitar en mayor medida
+        chocarse con obstáculos. Así además conseguimos minimizar el error, pues al volver a comprobar la posición cada iteración eliminamos el error que se hubiese acumulado de movimientos pasados. Una vez
+        completada la acción, el máximo error posible es de 7 pixeles, pues es el margen que le hemos dado para que se quede del centro
+    </p>  
+    <p>
+        Pese a todo y al correcto funcionamiento del algoritmo, las inexactitudes del mapa y la hitbox del robot no del todo precisa pueden llevar al robot a quedarse atascado con partes de la casa. Aunque también
+        se pueden identificar los puntos concretos de la casa dónde pasa esto para aplicarles correciones peronalizadas, hemos optado por darle una solución más general al problemas. Con este objetivo, hemos
+        modificado la función de movimiento para darle más fuerza al movimiento lineal que al angular, para así que se desatasque por su cuenta de los obstaculos, además de crear una trayectoria con más
+        sobreoscilaciones entre casillas, haciendo así que se barra más terreno.
+    </p>
+    <h3>Video</h3>
+    <video controls width="800">
+        <source src="Videos/vacuum.mp4" type="video/mp4">
+        Tu navegador no puede reproducir este vídeo.
+    </video>
+    <h2 id="practica2">P2. Drone Rescue People</h2>
+    <h3>Objetivos</h3>
+    <p>
+        En esta práctica, debemos programar a un dron para que rastree un area del oceano buscando supervivientes de un accidente de avión. Para ello podemos controlar al drón en los ejes xyz, además
+        poder capturar imagenes con una cámara frontal y otra inferior instaladas en el robot.
+    </p>
+    <h3>Solución propuesta</h3>
+    <p>
+        Para el algoritmo de busqueda hemos optado por una maquina de estados, para dividir las diferentes fases del rastreo. En todas estas fases, además de sus funciones caracteristicas, estaremos en todo momento
+        capturando la imagen inferior del dron buscando caras de supervivientes. Más adelante hablaremos del analisis de imagen, por ahora, estos son los estados del robot:
+    </p>  
+    <p>
+        <b>OBJECTIVE</b>: Este es el estado inicial, en el cual simplemente nos dirijiremos a la zona aproximada dónde ha ocurrido el accidente. La posición objetivo la calculamos previamente a partir de
+        las coordenadas que nos ha indicado el enunciado.
+    </p>  
+    <p>
+        <b>SEARCH</b>: Una vez lleguemos a la posición objetivo, iniciaremos un movimiento en espiral hacia fuera, para así poder cubrir todo el terreno de busqueda de una manera eficiente. La separación entre las
+        lineas del espiral y el radio total del espiral antes de dar la busqueda por concluida son facilmente modificables y el programa seguiría funcionando perfectamente. Estos valores pueden depender de la 
+        altura a la que queremos que vuele el dron o la cantidad de drones de los que dispongamos para la operación. En nuestro caso hemos optado por 30 unidades de anchura con 2 unidades de separación entre lineas
+        para evitar que tarde mucho en realizar la operación (las unidades podrían ser metros pero no se especifica en el enunciado). En adición, las posiciones a las que debe ir el dron se guardan para poder
+        continuar la operación en otro momento incluso aunque esta se interrumpa por motivos como el próximo estado, por ejemplo.
+    </p>  
+    <p>
+        <b>RECHARGE</b>: A medida que el dron se mueve, un contador de batería se ira agotando poco a poco. Si este baja del 20%, el robot volverá a sus coordenadas de origen para cargarse y, después, retomar la
+        busqueda por dónde la dejo. Para busquedas dónde se aleje mucho del bote de despliegue, se podría modificar el limite de batería antes de volver a cargarse dependiendo de cuan lejos esté del origen.
+    </p>  
+    <p>
+        <b>FINISH</b>: Cuando finalice la busqueda según las condiciones antes mencionadas, simplemente volverá al bote de despliegue e indicará la posición en coordenadas de todos los supervivientes localizados.
+        Este es el único estado que no se puede interrumpir por falta de batería, por motivos evidentes.
+    </p>
+    <p>
+        Una vez explicados los diferentes estados, podemos hablar del analisis de imagenes que se está ejecutando de fondo durante todos ellos. Gracias al algoritmo de reconocimiento de caras, podemos detectar 
+        a los supervivientes en la imagen, pero al no detectar caras en difernetes ángulos, rotamos la imagenes con un total de 9 orientaciones distintas antes de comprobar coincidencias. Una vez encontramos una
+        cara, calculamos la posición de la persona con la posición del dron y la posición de la persona en la imagen. Este úlitmo cálculo podría variar según la altura a la que vuele el dron. Para evitar registrar
+        la misma cara dos veces, comparamos con otras posiciones ya guardadas antes de guardar la nueva. Todas estas posiciones relativas luego las podemos pasar a coordenadas comparándolas con las equivalencias
+        posición-coordenada que ya conocemos.
+    </p>
+    <h3>Video</h3>
+    <video controls width="800">
+        <source src="Videos/drone.mp4" type="video/mp4">
+        Tu navegador no puede reproducir este vídeo.
+    </video>
+</body>
+</html>
