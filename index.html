@@ -15,6 +15,7 @@
     <ul>
         <li><a href="#practica1">P1. Localized Vacuum Cleaner</a></li>
         <li><a href="#practica2">P2. Drone Rescue People</a></li>
+        <li><a href="#practica3">P3. Autoparking</a></li>
     </ul>
     
     <h2 id="practica1">P1. Localized Vacuum Cleaner</h2>
@@ -97,6 +98,51 @@
     <h3>Video</h3>
     <video controls width="800">
         <source src="Videos/drone.mp4" type="video/mp4">
+        Tu navegador no puede reproducir este vídeo.
+    </video>
+    <h2 id="practica3">P3. Autoparking</h2>
+    <h3>Objetivos</h3>
+    <p>
+        En esta práctica, programaremos un coche para que recorra una calle buscando aparcamiento y, una vez encuentre un hueco suficientemente grande, realice la maniobra de aparcar. El algoritmo debe ser lo
+        suficientemente solido como para poder reconocer sitios y aparcar aunque no haya coches alrededor como referencia.
+    </p>
+    <h3>Solución propuesta</h3>
+    <p>
+        Para realizar este algoritmo, disponemos del control de velocidades V y W del coche, el cual tiene dinámica Ackerman. Tambien disponemos de un laser LIDAR, el cual nos da una nube de puntos correspondientes
+        a obstáculos que detecta en tres dimensiones alrededor del coche. Para usar estas detecciones a nuestro favor, hemos creado una función que filtra estos puntos según el area con referencia al coche dónde
+        queramos fijarnos, ignorando además detecciones irrelevantes como las del suelo o las del propio coche. Con estas herramientas, hemos creado una maquina de estados para conseguir que el coche aparque,
+        con subestados adicionales para realizar maniobras más complejas:
+    </p>  
+    <p>
+        <b>-ALIGN</b>: Como el coche puede aparecer con cualquier orientación y a con una distancia diferente al borde de la carretera cada vez que activamos el algoritmo, la primera maniobra que realizaremos será
+        una de acercamiento y alineacción con el borde de la carretera. Esta maniobra se dividirá en 2 partes. En la primera, giraremos el coche hacía la derecha hasta que detectemos algún obstáculo en la parte
+        frontal-derecha del coche (usualmente, otro coche ya aparcado). Una vez estemos cerca del borde, giraremos a la izquierda hasta que detectemos que los obataculos en la parte fontal-derecha y trasera-derecha
+        del coche están aproximadamente a la misma distancia. De esta manera, siempre acabaremos esta maniobra paralelos y a la misma distancia de la linea dónde queremos aparcar, lo que nos será útil para los
+        siguientes estados.
+    </p>  
+    <p>
+        <b>-SEARCH</b>: En este estado, el cohce simplemente conducirá hacía delante (dando por supuesto que ya está alineado y que no se deviará). Mientras conduce, detectará con el LIDAR si a su derecha hay un
+        espacio suficientemente grande como para realizar la maniobra de aparcar. En el momento en el que no detecte ningún punto en el area indicada a la derecha del coche, se dispondrá a aparcar.
+    </p>  
+    <p>
+        <b>-PARK</b>: Esta última maniobra es la más compleja. Primero de todo el coche girará hacia la izquierda para situarse diagonalmente respecto al hueco. Para este giro y para los siguientes que realice el
+        coche utilizaremos coordenadas relativas para comprobar si ha girado los radianes indicados. Una vez diagonales, retrocederemos hasta detectar con el LIDAR el bordillo. una vez aquí, entraremos en un bucle
+        reactivo dónde avancaremos un poco hacia delante mientras giramos a la derecha y luego retrocederemos hasta volver a encontrar el bordillo (u otro coche si lo hay). De esta manera, nos alinearemos poco a poco
+        con el bordillo sin salirnos del hueco ni arriesgarnos a chocarnos con obstáculos fuera del area que ya hemos confirmado que está libre. La maniobra terminará cuando detctemos que estamos paralelos con el
+        bordillo de la misma forma que lo hicimos en el estado ALIGN.
+    </p>  
+    <p>
+        Este algoritmo, aunque efectivo, tiene 3 inconvenientes principales. El primero de todos es que el alineamiento incial presupone que lo que hay a la derecha del coche no es un ya un aparcamiento valido, 
+        pues entonces se alinearía con el bordillo y no con otro coche, lo que podría complicar la busqueda de otro hueco. El segundo, es que el coche no dipone de un algoritmo de navegación como tal, por lo que 
+        no puede responder a cosas como que haya obstáculos en la propia carretera mientras busca aparcamiento. Esto, aunque no lo pedía en la práctica, sería un punto a considerar si quisiesemos aplicar este sistema
+        en el mundo real. Por último, está el problema de las latencias. La velocidad de detcción del LIDAR es inferior a la de movimiento del coche. Por ello, el coche puede recibir información importante con
+        retraso, lo cual es un error grave cuando hay riesgo de choque en las maniobras complicadas. Hay varias soluciones para este último problema: podemos mejorar la velocidad de repuesta con un mejor hardware
+        (lo cual no es siempre posible),reducir la velocidad del coche cuando realiza maniobras para que le de tiemo al LIDAR a procesar la información o integrar un controlador que pueda eliminar este error causado
+        por la latencia. En nuestro caso, nos ha bastado con la segunda opción, pero con un algoritmo más completo seguramnete optariamos por la tercera.
+    </p>
+    <h3>Video</h3>
+    <video controls width="800">
+        <source src="Videos/autoparking.mp4" type="video/mp4">
         Tu navegador no puede reproducir este vídeo.
     </video>
 </body>
