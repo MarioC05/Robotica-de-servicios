@@ -16,6 +16,7 @@
         <li><a href="#practica1">P1. Localized Vacuum Cleaner</a></li>
         <li><a href="#practica2">P2. Drone Rescue People</a></li>
         <li><a href="#practica3">P3. Autoparking</a></li>
+        <li><a href="#practica4">P4. Amazon Warehouse</a></li>
     </ul>
     
     <h2 id="practica1">P1. Localized Vacuum Cleaner</h2>
@@ -143,6 +144,57 @@
     <h3>Video</h3>
     <video controls width="800">
         <source src="Videos/autoparking.mp4" type="video/mp4">
+        Tu navegador no puede reproducir este vídeo.
+    </video>
+        <h2 id="practica4">P4. Amazon Warehouse</h2>
+    <h3>Objetivos</h3>
+    <p>
+        En esta práctica tenemos que programar dos robots diferentes 8uno holonómico y otro con dinámica ackerman) para que puedan transportar estanterias dentro de un almacen usando la bibilioteca OMPL para la
+        navegación global.
+    </p>
+    <h3>Solución propuesta</h3>
+    <p>
+        Para realizar esta tarea, hemos creado una lista de puntos que representan en coordenadas globales dónde están y dónde debemos dejar cada estantería. Una vez tenemos la lista, tendremos que ir punto por
+        punto planificando la trayectoria hasta ese objetivo. Para ello, usaremos la libreria OMPL. Dado un punto inicio, un punto final, un algoritmo de planificación que le especifiquemos y una función que
+        le ayude a distinguir que estados son transitables y cuales no, generaremos una serie de puntos intermedios que nos llevarán al objetivo. En nuestro caso, hemos usado el algoritmo de planificación RRT*, el
+        cual es una versión mejorada de RRT (que explora el espacio mediante muestreo aleatorio), pues va optimizando la trayectoria rogresivamente. Tambien es importante mencionar que el espacio de estados que
+        hemos usado para OMPL es SE2StateSpace (excepto para la última fase, ya lo comentaremos), el cual permite calcular la posición Y, la Y y el Yaw del robot durante la trayectoria. 
+        La práctica se divide en 3 fases diferentes. Las dos primeras usan un robot holonómico, es decir, que puede girar sobre si mismo, y solo se diferencian entre ellas en como calculan si un estado es valido
+        o no. La última fase, en cambio, usa un robot con dinámica ackerman, por lo que no se puede mover en todas las direcciones con total libretad y se ve limitado por su ángulo máximo de giro. Ahora explicaremos
+        más a fondo como hemos afrontado cada fase más a fondo.
+    </p>  
+    <p>
+        <b>Fase 1</b>: Para comprobar si un estado es valido con OMPL, no nos basta con ver si el pixel que estamos mirando está ocupado o no, pues el robot tiene un volumen concreto y ocupa varios pixeles. Por ello,
+        hemos creado varias variaciones del mapa que usamos para la navegación global, en las cuales erosionamos los obstáculos dependiendo del radio del robot o del objeto que este llevando en ese momento (en 
+        nuestro caso, solo estanterias, pero en un escenario real podría variar más). Además, modificamos los mapas siempre que cogemos o dejamos una estanteria, para poder esquivar obstáculos que nosotros mismos
+        colocado y no tener en cuenta los muebles que ya no están ahí. Para el seguir la trayectoria correctamente, hemos implementado un controlador proporcional sencillo que ajuste las velocidades lineales y
+        ángulares, ya que el robot holonómico puede seguir cualquier ruta con relativa facilidad y rapidez. Aunque la orientación del robot no es importante mientras seguimos la trayectoria, si tenemos que tenerla
+        en cuenta al coger y dejar estanterias para no cambiar la orientación de estas.
+    </p>  
+    <p>
+        <b>Fase 2</b>: Auqnue la validación de estados de la primera fase es correcta, trabajar con cv2 con varios mapas simultaneamente puedo ser costoso computacionalmente. Por ello, en esta fase, hemos dejado el
+        mapa tal cual está y modificado en cambio la propia función de validación. Ahora en vez de comprobar si un pixel está o no ocupado, dibujamos un circulo alrededor del pixel con radio igual a la mayor longitud
+        posible del robot, para así asegurarnos de que este estado es valido independientemente de la orientación del robot. Esto es efectivo con robots cuadrados y pequeños, pero si de verdad queremos optimizar el
+        espacio, tambien podemos comprobar el yaw del estado y dibujar el verdadero area del robot en esa orientación concreta. Esto lo implementaremos en la siguiente fase, pues el robot es rectangular y 
+        considerabelmente más grande. Aparte de eso, el programa de la fase 2 no cambio mucho más respecto a la fase anterior.
+    </p>  
+    <p>
+        <b>Fase 3</b>: Al usar en esta fase un robot con dinámica ackerman, debemos tener en cuenta a la hora de planificar la trayectoria el ángulo del robot en cada estado, pues si es demasiado grande, el robot
+        podrá alcanzarlo. Para ello, cambiaremos el espacio de estados a ReedsSheppStateSpace, lo cual nos otorga dos ventajas principales. La primera y más importante es que podemos asignar un radio mínimo de giro
+        para asegurarnos de que ningún punto de la trayectoria nos requiera hacer una curva más cerrada de lo que el robot pueda realizar. La segunda ventaja es que el planificador contempla que el robot puede ir
+        hacia atrás, lo cual es muy útil en este escenario en concreto. Para poder seguir esta nueva trayectoria, hemos modificado el controlador para que sea un PD, y bajado la velocidad máxima para que pueda seguir
+        los puntos con bastante recisión, pues incluso un error mediano puede causar que nuestro robot se desvie irremediablemnte de la trayectoria. Aún así, a veces el robot no puede llegar a seguir del todo la
+        trayectoria planificada. Esto se podría resolver siendo más estrixto con el planificador (por ejemplo, asignando un radio mínimo más grande), pero esto también podría implicar que no encuentre soluciones para
+        ciertas trayectorias.
+    </p>  
+    <h3>Video holonómico</h3>
+    <video controls width="800">
+        <source src="Videos/warehouse_h.mp4" type="video/mp4">
+        Tu navegador no puede reproducir este vídeo.
+    </video>
+    <h3>Video ackerman</h3>
+    <video controls width="800">
+        <source src="Videos/warehouse_a.mp4" type="video/mp4">
         Tu navegador no puede reproducir este vídeo.
     </video>
 </body>
